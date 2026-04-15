@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Matrícula{% endblock %}
+
+{% block body %}
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-mini">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="8" fill="white"/>
+                    <path d="M12 14H28M12 20H28M12 26H20" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="logo-info">
+                <span class="logo-name">UTP</span>
+                <span class="logo-desc">Sistema de Matrícula</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('matricula') }}" class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Matrícula</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>Mi Horario</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span>Calificaciones</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                </svg>
+                <span>Pagos</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">
+                    {{ session['nombre'][0] }}{{ session['nombre'].split()[1][0] if session['nombre'].split()|length > 1 else '' }}
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ session['nombre'] }}</span>
+                    <span class="user-id">{{ session['cedula'] }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <h1>Matrícula de Materias</h1>
+                <p>{{ periodo['nombre'] if periodo else 'Sin periodo activo' }} • {{ session['carrera'] }}</p>
+            </div>
+            <div class="header-right">
+                <div class="credits-badge">
+                    <span class="credits-number">{{ total_creditos }}</span>
+                    <span class="credits-label">Créditos</span>
+                </div>
+            </div>
+        </header>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} main-alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="content-grid">
+            <!-- Materias Disponibles -->
+            <section class="card materias-section">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 6h16M4 12h16M4 18h7"/>
+                        </svg>
+                        Materias Disponibles
+                    </h2>
+                    <div class="filters">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            <input type="text" id="searchInput" placeholder="Buscar materia...">
+                        </div>
+                        <select id="semestreFilter">
+                            <option value="">Todos los semestres</option>
+                            <option value="1">Semestre 1</option>
+                            <option value="2">Semestre 2</option>
+                            <option value="3">Semestre 3</option>
+                            <option value="4">Semestre 4</option>
+                            <option value="5">Semestre 5</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="materiasTable">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Materia</th>
+                                <th>Sem.</th>
+                                <th>Créditos</th>
+                                <th>Sección</th>
+                                <th>Profesor</th>
+                                <th>Horario</th>
+                                <th>Cupos</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in materias %}
+                            <tr data-semestre="{{ m['semestre'] }}" data-seccion="{{ m['id_seccion'] }}">
+                                <td><span class="code-badge">{{ m['codigo'] }}</span></td>
+                                <td class="materia-name">{{ m['materia'] }}</td>
+                                <td><span class="sem-badge">{{ m['semestre'] }}</span></td>
+                                <td>{{ m['creditos'] }}</td>
+                                <td>{{ m['seccion'] }}</td>
+                                <td>{{ m['profesor'] }}</td>
+                                <td><span class="horario-tag">{{ m['horario'] }}</span></td>
+                                <td>
+                                    <span class="cupos-badge {% if m['cupos_disponibles'] <= 5 %}warning{% elif m['cupos_disponibles'] == 0 %}danger{% endif %}">
+                                        {{ m['cupos_disponibles'] }}/{{ m['cupo_maximo'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if m['id_seccion'] in secciones_matriculadas %}
+                                        <button class="btn-action enrolled" disabled>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                            Inscrito
+                                        </button>
+                                    {% elif m['cupos_disponibles'] == 0 %}
+                                        <button class="btn-action full" disabled>Sin cupos</button>
+                                    {% else %}
+                                        <button class="btn-action enroll" onclick="matricular({{ m['id_seccion'] }}, '{{ m['materia'] }}', '{{ m['seccion'] }}')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            Matricular
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Mi Matrícula -->
+            <section class="card mi-matricula-section">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Mi Matrícula Actual
+                    </h2>
+                    <span class="total-badge">{{ mi_matricula|length }} materias • {{ total_creditos }} créditos</span>
+                </div>
+                
+                <div class="enrolled-list" id="enrolledList">
+                    {% if mi_matricula %}
+                        {% for m in mi_matricula %}
+                        <div class="enrolled-card" data-matricula="{{ m['id_matricula'] }}">
+                            <div class="enrolled-info">
+                                <span class="enrolled-code">{{ m['codigo'] }}</span>
+                                <span class="enrolled-name">{{ m['materia'] }}</span>
+                                <span class="enrolled-details">{{ m['seccion'] }} • {{ m['profesor'] }} • {{ m['horario'] }}</span>
+                            </div>
+                            <div class="enrolled-meta">
+                                <span class="enrolled-credits">{{ m['creditos'] }} cr.</span>
+                                <button class="btn-remove" onclick="retirar({{ m['id_matricula'] }}, '{{ m['materia'] }}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            <p>No tienes materias matriculadas</p>
+                            <span>Selecciona materias de la lista para inscribirte</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-icon" id="modalIcon"></div>
+        <h3 id="modalTitle"></h3>
+        <p id="modalMessage"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button class="btn-confirm" id="modalConfirm">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// Filtros
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('semestreFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const semestre = document.getElementById('semestreFilter').value;
+    const rows = document.querySelectorAll('#materiasTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowSemestre = row.dataset.semestre;
+        
+        const matchSearch = text.includes(search);
+        const matchSemestre = !semestre || rowSemestre === semestre;
+        
+        row.style.display = matchSearch && matchSemestre ? '' : 'none';
+    });
+}
+
+// Modal
+let currentAction = null;
+let currentData = null;
+
+function openModal(icon, title, message, confirmText, action, data) {
+    document.getElementById('modalIcon').innerHTML = icon;
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalConfirm').textContent = confirmText;
+    document.getElementById('modalOverlay').classList.add('active');
+    
+    currentAction = action;
+    currentData = data;
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+    currentAction = null;
+    currentData = null;
+}
+
+document.getElementById('modalConfirm').addEventListener('click', async () => {
+    if (currentAction === 'matricular') {
+        await doMatricular(currentData.id);
+    } else if (currentAction === 'retirar') {
+        await doRetirar(currentData.id);
+    }
+    closeModal();
+});
+
+// Toast
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">
+            ${type === 'success' 
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
+            }
+        </span>
+        <span class="toast-message">${message}</span>
+    `;
+    
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Matricular
+function matricular(id, materia, seccion) {
+    openModal(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>',
+        'Confirmar Matrícula',
+        `¿Deseas matricularte en ${materia} - Sección ${seccion}?`,
+        'Matricular',
+        'matricular',
+        { id, materia }
+    );
+}
+
+async function doMatricular(id) {
+    try {
+        const response = await fetch('/api/matricular', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_seccion: id })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        showToast('Error al procesar la solicitud', 'error');
+    }
+}
+
+// Retirar
+function retirar(id, materia) {
+    openModal(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>',
+        'Confirmar Retiro',
+        `¿Estás seguro de retirar ${materia}?`,
+        'Retirar',
+        'retirar',
+        { id }
+    );
+}
+
+async function doRetirar(id) {
+    try {
+        const response = await fetch('/api/retirar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_matricula: id })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        showToast('Error al procesar la solicitud', 'error');
+    }
+}
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+</script>
+{% endblock %}
